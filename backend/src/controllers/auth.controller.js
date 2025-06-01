@@ -5,9 +5,9 @@ import { generateTokenAndSetCookie } from '../utils/generateToken.js';
 export const signup = async (req,res)=>{
     try {
         
-const {username,fullName,email,password} = req.body;
+const {email,username,fullName,password} = req.body;
 
- if(username || fullName || email || password){
+ if(!username || !fullName || !email || !password){
 return res.status(400).json({error:"all fields are required"})
   }
 
@@ -30,9 +30,10 @@ const newUser = new User({
     password:hashedPassword,
 })
 
+await newUser.save();
+
 generateTokenAndSetCookie(newUser._id,res)
 
-await newUser.save();
 
 res.status(201).json({message:"User created successfully",newUser:newUser})
 
@@ -50,14 +51,16 @@ export const login = async (req,res)=>{
 
     try {
         
-        const {email,password} = req.body;
-        if(!email || !password){
+        const {username,password} = req.body;
+        if(!username || !password){
             return res.status(400).json({message:"all fields are required"})
         }
-        const existingUser = await User.find({email});
-        if(!existingUser){
-            return res.status(400).json({message:"user already exists"})
-        }
+        const existingUser = await User.findOne({username});
+       
+        if (!existingUser) {
+  return res.status(400).json({ message: "User does not exist" });
+}
+
         const isMatch = await bcrypt.compare(password,existingUser.password);
 
         if(!isMatch){
