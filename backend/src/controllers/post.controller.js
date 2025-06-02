@@ -121,21 +121,21 @@ export const getLikedPosts = async(req,res)=>{
 
 export const createPost = async (req, res) => {
   try {
-    let { text, image } = req.body;
+    let { text, img } = req.body;
     const userId = req.user._id.toString();
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (!text && !image)
+    if (!text && !img)
       return res.status(400).json({ error: "Post must have text or image" });
 
-    if (image) {
-      const uploadResponse = await cloudinary.uploader.upload(image);
-      image = uploadResponse.secure_url;
+    if (img) {
+      const uploadResponse = await cloudinary.uploader.upload(img);
+      img = uploadResponse.secure_url;
     }
 
-    const newPost = new Post({ user: userId, text, image });
+    const newPost = new Post({ user: userId, text, img });
     await newPost.save();
 
     res.status(201).json(newPost);
