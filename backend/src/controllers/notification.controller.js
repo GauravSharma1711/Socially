@@ -14,7 +14,7 @@ const notification =  await Notification.find({to:userId})
 await Notification.updateMany({to:userId},{read:true})
 
 
-response.status(200).json(notification);
+res.status(200).json(notification);
 
 
     } catch (error) {
@@ -25,7 +25,7 @@ response.status(200).json(notification);
 }
 
 
-export const deleteNotiofications = async()=>{
+export const deleteNotiofications = async(req,res)=>{
     try {
         const userId = req.user._id;
 
