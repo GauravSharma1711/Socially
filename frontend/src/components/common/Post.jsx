@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import LoadingSpinner from "./LoadingSpinner";
+import { formatPostDate } from "../../utils/date/index.js";
 
 const Post = ({ post }) => {
 	const [comment, setComment] = useState("");
@@ -16,7 +17,17 @@ const Post = ({ post }) => {
 
 	const queryClient = useQueryClient()
 
-	const {mutate:deletePost,isPending}  = useMutation({
+	
+	const postOwner = post.user;
+	const isLiked = post.likes.includes(authUser._id)
+	
+const isMyPost = authUser?._id === post.user._id;
+
+	const formattedDate = formatPostDate(post.createdAt);
+
+
+
+	const {mutate:deletePost,isPending:isDeleting}  = useMutation({
 		mutationFn: async ()=>{
 			try {
 				const res = await fetch(`/api/v1/post/${post._id}`,{
@@ -39,15 +50,61 @@ const Post = ({ post }) => {
 		}
 	})
 
-	const postOwner = post.user;
-	const isLiked = false;
-	
-const isMyPost = authUser?._id === post.user._id;
+	const {mutate:likePost,isPending:isLiking} = useMutation({
+		mutationFn: async ()=>{
+			try {
+				
+const res = await fetch(`api/v1/post/like/${post._id}`,{
+	method:"POST",
+});
+  const data = await res.json();
+  if(!res.ok){
+	throw new Error(data.error || "Something went wrong")
+  }
+  return data
+			} catch (error) {
+				throw new Error(error);
+			}
+		},
+		onSuccess : ()=>{
+			queryClient.invalidateQueries({queryKey:["posts"]})
+		},
+		onError : (error)=>{
+			toast.error(error.message)
+		},
+	})
+
+	const {mutate:commentPost,isPending:isCommenting} = useMutation({
+		mutationFn: async ()=>{
+			try {
+				const res = await fetch(`/api/v1/post/comment/${post._id}`,{
+					method:"POST",
+					headers:{
+						"Content-Type":"application/json",
+					},
+					body:JSON.stringify({text:comment})
+				})
+				const data = await res.json();
+				if(!res.ok){
+					throw new Error(data.error || "Something went wrong");
+				}
+				return data
+			} catch (error) {
+				throw new Error(error);
+			}
+		},
+		onSuccess:()=>{
+			toast.success("Comment posted successfully")
+			setComment("")
+			queryClient.invalidateQueries({queryKey:['posts']})
+		},
+		onError:(error)=>{toast.error(error.message)}
+	})
 
 
-	const formattedDate = "1h";
 
-	const isCommenting = false;
+
+
 
 	const handleDeletePost = () => {
 		deletePost();
@@ -55,9 +112,14 @@ const isMyPost = authUser?._id === post.user._id;
 
 	const handlePostComment = (e) => {
 		e.preventDefault();
+		if(isCommenting)return;
+		commentPost();
 	};
 
-	const handleLikePost = () => {};
+	const handleLikePost = () => {
+		if(isLiking)return;
+		likePost()
+	};
 
 	return (
 		<>
@@ -80,10 +142,10 @@ const isMyPost = authUser?._id === post.user._id;
 						{isMyPost && (
 							<span className='flex justify-end flex-1'>
 
-								{!isPending && <FaTrash className='cursor-pointer hover:text-red-500'
+								{!isDeleting && <FaTrash className='cursor-pointer hover:text-red-500'
 								 onClick={handleDeletePost} />}
 
-								{isPending && (
+								{isDeleting && (
 									<LoadingSpinner size="sm" />
 								)}
 							</span>
@@ -153,7 +215,7 @@ const isMyPost = authUser?._id === post.user._id;
 										/>
 										<button className='btn btn-primary rounded-full btn-sm text-white px-4'>
 											{isCommenting ? (
-												<span className='loading loading-spinner loading-md'></span>
+											<LoadingSpinner size="md" />
 											) : (
 												"Post"
 											)}
@@ -169,10 +231,11 @@ const isMyPost = authUser?._id === post.user._id;
 								<span className='text-sm text-slate-500 group-hover:text-green-500'>0</span>
 							</div>
 							<div className='flex gap-1 items-center group cursor-pointer' onClick={handleLikePost}>
-								{!isLiked && (
+								{isLiking && <LoadingSpinner/>}
+								{!isLiked && !isLiked && (
 									<FaRegHeart className='w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500' />
 								)}
-								{isLiked && <FaRegHeart className='w-4 h-4 cursor-pointer text-pink-500 ' />}
+								{isLiked && !isLiking   && <FaRegHeart className='w-4 h-4 cursor-pointer text-pink-500 ' />}
 
 								<span
 									className={`text-sm text-slate-500 group-hover:text-pink-500 ${
