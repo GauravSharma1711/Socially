@@ -1,5 +1,6 @@
 
 import User from "../models/user.model.js";
+import Notification from '../models/notification.model.js'
 
 import { v2 as cloudinary } from "cloudinary";
 
@@ -105,7 +106,7 @@ export const followUnfollowUser = async (req, res) => {
 				to: userId,
 				type: "follow",
 			});
-			await newNotification.dispatchEvent();
+			await newNotification.save();
 
 			return res.status(200).json({ message: "Followed user successfully" });
 		}
