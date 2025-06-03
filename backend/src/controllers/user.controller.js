@@ -9,7 +9,7 @@ export const getProfile = async (req,res)=>{
         
         const {username} = req.params;
 
-       const user = await User.find({username}).select("-password")
+       const user = await User.findOne({username}).select("-password")
 
        if(!user){
         return res.status(404).json({error:"User with this username does not exist "});
