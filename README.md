@@ -1,5 +1,3 @@
-
-```markdown
 # 📱 Socially - A Full-Stack Social Media Platform
 
 Welcome to **Socially** — a full-fledged social media web app where users can connect, post updates, like, comment, and follow others! 🗨️✨
@@ -35,6 +33,3 @@ Welcome to **Socially** — a full-fledged social media web app where users can 
 ## 🔗 Live Demo
 
 🌐 [Socially Live](https://socially-5rw2.onrender.com)
-
----
-
